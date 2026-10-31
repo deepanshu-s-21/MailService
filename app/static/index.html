@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MailService Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- Top Header Navigation -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        
+        <!-- Logo & Title -->
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+            <i data-lucide="send" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h1 class="text-lg font-bold text-slate-900 tracking-tight">MailService</h1>
+              <span class="text-xs px-2 py-0.5 rounded-full font-semibold bg-indigo-50 text-brand-600 border border-indigo-100">v1.0</span>
+            </div>
+            <p class="text-xs text-slate-500">Fast & Reusable Email Dispatcher</p>
+          </div>
+        </div>
+
+        <!-- SMTP & Server Status -->
+        <div class="flex items-center space-x-4">
+          <div id="smtpStatusBadge" class="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <span id="smtpStatusText">Checking SMTP...</span>
+          </div>
+
+          <!-- Documentation / API Link -->
+          <a href="/docs" target="_blank" class="flex items-center space-x-1.5 text-xs font-medium text-slate-600 hover:text-brand-600 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-brand-200 hover:bg-brand-50 transition">
+            <i data-lucide="file-code" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Swagger API Docs</span>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- Metrics Cards -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Total Emails</p>
+          <h3 id="statTotal" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+          <i data-lucide="mail" class="w-5 h-5"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Delivered</p>
+          <h3 id="statSent" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <i data-lucide="check-circle" class="w-5 h-5"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Failed</p>
+          <h3 id="statFailed" class="text-2xl font-bold text-rose-600 mt-1">0</h3>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+          <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Success Rate</p>
+          <h3 id="statRate" class="text-2xl font-bold text-slate-900 mt-1">100%</h3>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-indigo-50 text-brand-600 flex items-center justify-center">
+          <i data-lucide="activity" class="w-5 h-5"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+      <div class="flex space-x-2">
+        <button id="tabBtnCompose" onclick="switchTab('compose')" class="flex items-center space-x-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition bg-brand-600 text-white shadow-sm shadow-brand-500/20">
+          <i data-lucide="send" class="w-4 h-4"></i>
+          <span>Compose Email</span>
+        </button>
+        <button id="tabBtnHistory" onclick="switchTab('history')" class="flex items-center space-x-2 px-4 py-2.5 rounded-xl font-medium text-sm transition text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+          <i data-lucide="history" class="w-4 h-4"></i>
+          <span>Sent Mail History</span>
+          <span id="tabCountBadge" class="ml-1 text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">0</span>
+        </button>
+      </div>
+
+      <div id="historyQuickActions" class="hidden items-center space-x-2">
+        <label class="flex items-center space-x-1.5 text-xs text-slate-500 cursor-pointer select-none">
+          <input type="checkbox" id="autoRefreshToggle" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+          <span>Auto-refresh</span>
+        </label>
+        <button onclick="loadEmails()" class="flex items-center space-x-1 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 shadow-sm transition">
+          <i data-lucide="refresh-cw" id="refreshIcon" class="w-3.5 h-3.5"></i>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 1: COMPOSE VIEW -->
+    <section id="viewCompose" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Compose Form (Left 7 Cols) -->
+      <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+        
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Send New Message</h2>
+            <p class="text-xs text-slate-500">Enter recipient email address and mail content</p>
+          </div>
+
+          <!-- Quick Templates Dropdown/Pills -->
+          <div class="flex items-center space-x-1 text-xs">
+            <span class="text-slate-400 hidden sm:inline">Templates:</span>
+            <button type="button" onclick="loadTemplate('welcome')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition">Welcome</button>
+            <button type="button" onclick="loadTemplate('alert')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition">Alert</button>
+            <button type="button" onclick="loadTemplate('receipt')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium transition">Receipt</button>
+          </div>
+        </div>
+
+        <form id="emailForm" onsubmit="handleSendEmail(event)" class="space-y-4">
+          
+          <!-- Recipient Field -->
+          <div>
+            <label for="toEmail" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              Send To (Recipient Email) <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative rounded-xl shadow-sm">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i data-lucide="at-sign" class="w-4 h-4"></i>
+              </div>
+              <input 
+                type="email" 
+                id="toEmail" 
+                name="to" 
+                required 
+                placeholder="recipient@example.com"
+                class="block w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm text-slate-900 placeholder-slate-400 bg-slate-50/50 hover:bg-white transition"
+              />
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">Must be a valid email address.</p>
+          </div>
+
+          <!-- Subject Field -->
+          <div>
+            <label for="subject" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              Subject Line <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative rounded-xl shadow-sm">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i data-lucide="type" class="w-4 h-4"></i>
+              </div>
+              <input 
+                type="text" 
+                id="subject" 
+                name="subject" 
+                required 
+                placeholder="Important updates regarding your account"
+                oninput="updatePreview()"
+                class="block w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm text-slate-900 placeholder-slate-400 bg-slate-50/50 hover:bg-white transition"
+              />
+            </div>
+          </div>
+
+          <!-- Content / Body Field -->
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label for="body" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                Email Content <span class="text-rose-500">*</span>
+              </label>
+              <span id="charCount" class="text-[11px] text-slate-400">0 characters</span>
+            </div>
+            <textarea 
+              id="body" 
+              name="body" 
+              rows="7" 
+              required 
+              placeholder="Write your email message here..."
+              oninput="updatePreview(); updateCharCount();"
+              class="block w-full p-3.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm text-slate-900 placeholder-slate-400 bg-slate-50/50 hover:bg-white transition font-sans custom-scrollbar"
+            ></textarea>
+            <p class="text-[11px] text-slate-500 mt-1">Your message will be wrapped in the clean HTML responsive mail layout before transmission.</p>
+          </div>
+
+          <!-- Alert / Status Notice Banner -->
+          <div id="formAlert" class="hidden rounded-xl p-4 text-sm font-medium"></div>
+
+          <!-- Actions Bar -->
+          <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+            <button 
+              type="button" 
+              onclick="resetForm()" 
+              class="px-4 py-2.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition"
+            >
+              Clear Form
+            </button>
+
+            <button 
+              type="submit" 
+              id="sendBtn" 
+              class="flex items-center space-x-2 px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-brand-500/25 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <i data-lucide="send" id="sendBtnIcon" class="w-4 h-4"></i>
+              <span id="sendBtnText">Send Email</span>
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+
+      <!-- Live Email Preview (Right 5 Cols) -->
+      <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="eye" class="w-4 h-4 text-brand-600"></i>
+            <h3 class="text-sm font-bold text-slate-900">Live Recipient Preview</h3>
+          </div>
+          <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">HTML Template</span>
+        </div>
+
+        <p class="text-xs text-slate-500 mb-3">This shows exactly how the email renders in the recipient's inbox:</p>
+
+        <!-- Preview Card Mockup -->
+        <div class="flex-1 border border-slate-200 rounded-xl bg-slate-50 p-4 flex flex-col justify-start">
+          <div class="bg-white rounded-lg shadow-sm border border-slate-100 p-6 flex-1 flex flex-col max-w-[500px] w-full mx-auto">
+            <h2 id="previewSender" class="text-lg font-bold text-slate-900 mb-2">Mail Service</h2>
+            <h3 id="previewSubject" class="text-sm font-semibold text-brand-600 mb-4 pb-2 border-b border-slate-100">(Subject will appear here)</h3>
+            
+            <div id="previewBody" class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed flex-1">
+              Your message content will be displayed here in real time as you compose...
+            </div>
+
+            <div class="mt-6 pt-3 border-t border-slate-200 text-xs text-slate-400">
+              This is an automated email.
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 2: SENT MAIL HISTORY VIEW -->
+    <section id="viewHistory" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+      
+      <!-- Filter Bar -->
+      <div class="flex flex-col sm:flex-row gap-3 justify-between items-center pb-3 border-b border-slate-100">
+        
+        <!-- Search -->
+        <div class="relative w-full sm:w-80">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <i data-lucide="search" class="w-4 h-4"></i>
+          </div>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Search by recipient or subject..." 
+            oninput="handleSearch()"
+            class="block w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-slate-50/50 hover:bg-white transition"
+          />
+        </div>
+
+        <!-- Status Filter Pills -->
+        <div class="flex items-center space-x-1.5 w-full sm:w-auto">
+          <button onclick="setStatusFilter('ALL')" id="filterBtnAll" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white shadow-sm transition">All</button>
+          <button onclick="setStatusFilter('SENT')" id="filterBtnSent" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition">Sent</button>
+          <button onclick="setStatusFilter('FAILED')" id="filterBtnFailed" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition">Failed</button>
+        </div>
+
+      </div>
+
+      <!-- History Email Table/List -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="text-xs uppercase font-semibold text-slate-500 bg-slate-50/80 border-b border-slate-200">
+              <th class="py-3 px-4 rounded-l-lg">Status</th>
+              <th class="py-3 px-4">Recipient</th>
+              <th class="py-3 px-4">Subject & Snippet</th>
+              <th class="py-3 px-4">Timestamp</th>
+              <th class="py-3 px-4 text-right rounded-r-lg">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="emailTableBody" class="divide-y divide-slate-100">
+            <!-- Dynamic Rows Injected Here -->
+          </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden py-16 text-center space-y-3">
+          <div class="w-14 h-14 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+            <i data-lucide="inbox" class="w-7 h-7"></i>
+          </div>
+          <h4 class="text-base font-semibold text-slate-800">No emails found</h4>
+          <p class="text-xs text-slate-500 max-w-sm mx-auto">Emails sent through the web UI or via the API endpoint (<code class="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-600">/api/email/send</code>) will appear here automatically.</p>
+          <button onclick="switchTab('compose')" class="mt-2 inline-flex items-center space-x-1.5 px-4 py-2 bg-brand-600 text-white text-xs font-semibold rounded-xl hover:bg-brand-700 transition shadow-sm">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+            <span>Send First Email</span>
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Email Details Modal -->
+  <div id="detailsModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in duration-200">
+      
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div class="flex items-center space-x-3">
+          <div id="modalStatusBadge" class="px-2.5 py-1 rounded-full text-xs font-bold"></div>
+          <h3 id="modalSubject" class="text-base font-bold text-slate-900 truncate max-w-md"></h3>
+        </div>
+        <button onclick="closeModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body Content -->
+      <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+        
+        <!-- Metadata Grid -->
+        <div class="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+          <div>
+            <span class="text-slate-400 font-medium block">Recipient:</span>
+            <span id="modalTo" class="font-semibold text-slate-800 break-all"></span>
+          </div>
+          <div>
+            <span class="text-slate-400 font-medium block">Sent At:</span>
+            <span id="modalDate" class="font-semibold text-slate-800"></span>
+          </div>
+        </div>
+
+        <!-- Failure Error Notice (If failed) -->
+        <div id="modalErrorContainer" class="hidden bg-rose-50 border border-rose-200 text-rose-700 text-xs p-3.5 rounded-xl space-y-1">
+          <div class="font-semibold flex items-center space-x-1">
+            <i data-lucide="alert-circle" class="w-4 h-4"></i>
+            <span>Delivery Error Details</span>
+          </div>
+          <p id="modalErrorText" class="font-mono text-[11px] whitespace-pre-wrap break-all"></p>
+        </div>
+
+        <!-- Email Body Presentation -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Message Body</label>
+          <div id="modalBody" class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-800 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto custom-scrollbar font-sans"></div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+        <button onclick="copyModalBody()" class="flex items-center space-x-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 px-3 py-2 rounded-lg border border-slate-200 hover:bg-white transition">
+          <i data-lucide="copy" class="w-4 h-4"></i>
+          <span id="copyBtnText">Copy Body</span>
+        </button>
+
+        <div class="flex items-center space-x-2">
+          <button onclick="resendFromModal()" class="flex items-center space-x-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-4 py-2 rounded-lg transition">
+            <i data-lucide="repeat" class="w-4 h-4"></i>
+            <span>Reuse in Compose</span>
+          </button>
+          <button onclick="closeModal()" class="text-xs font-semibold px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition">
+            Close
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400 mt-auto">
+    MailService &copy; <span id="yearSpan"></span> &bull; Fast, Reusable API &amp; Web UI
+  </footer>
+
+  <!-- Main JavaScript App Logic -->
+  <script>
+    document.getElementById('yearSpan').textContent = new Date().getFullYear();
+
+    // App State
+    let emails = [];
+    let currentStatusFilter = 'ALL';
+    let searchQuery = '';
+    let autoRefreshInterval = null;
+    let selectedEmailForModal = null;
+    let smtpInfo = { is_configured: false, from_name: 'Mail Service' };
+
+    // Templates
+    const templates = {
+      welcome: {
+        subject: "Welcome to our platform!",
+        body: "Hello,\n\nThank you for signing up with our service! We are thrilled to have you onboard.\n\nIf you have any questions or need assistance, feel free to reply directly to this email.\n\nBest regards,\nThe Team"
+      },
+      alert: {
+        subject: "System Notification: Scheduled Maintenance Notice",
+        body: "Dear Customer,\n\nPlease be advised that our system will undergo scheduled routine maintenance this weekend. Service disruptions are expected to be minimal.\n\nThank you for your understanding and continued support."
+      },
+      receipt: {
+        subject: "Your Order & Payment Confirmation",
+        body: "Hi there,\n\nWe have successfully received your payment. Your transaction has been processed and your account is active.\n\nOrder ID: #INV-98241\nStatus: Paid\n\nThank you for your business!"
+      }
+    };
+
+    // Initialize
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      fetchSMTPStatus();
+      loadEmails();
+      loadStats();
+
+      // Keyboard shortcut Ctrl+Enter to send
+      document.getElementById('emailForm').addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById('emailForm').requestSubmit();
+        }
+      });
+
+      // Auto-refresh checkbox listener
+      document.getElementById('autoRefreshToggle').addEventListener('change', (e) => {
+        if (e.target.checked) {
+          autoRefreshInterval = setInterval(() => {
+            loadEmails(true);
+            loadStats();
+          }, 10000);
+        } else {
+          if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+        }
+      });
+    });
+
+    // Switch Tabs
+    function switchTab(tab) {
+      const composeBtn = document.getElementById('tabBtnCompose');
+      const historyBtn = document.getElementById('tabBtnHistory');
+      const composeView = document.getElementById('viewCompose');
+      const historyView = document.getElementById('viewHistory');
+      const historyActions = document.getElementById('historyQuickActions');
+
+      if (tab === 'compose') {
+        composeBtn.className = "flex items-center space-x-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition bg-brand-600 text-white shadow-sm shadow-brand-500/20";
+        historyBtn.className = "flex items-center space-x-2 px-4 py-2.5 rounded-xl font-medium text-sm transition text-slate-600 hover:text-slate-900 hover:bg-slate-100";
+        composeView.classList.remove('hidden');
+        historyView.classList.add('hidden');
+        historyActions.classList.add('hidden');
+        historyActions.classList.remove('flex');
+      } else {
+        historyBtn.className = "flex items-center space-x-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition bg-brand-600 text-white shadow-sm shadow-brand-500/20";
+        composeBtn.className = "flex items-center space-x-2 px-4 py-2.5 rounded-xl font-medium text-sm transition text-slate-600 hover:text-slate-900 hover:bg-slate-100";
+        composeView.classList.add('hidden');
+        historyView.classList.remove('hidden');
+        historyActions.classList.remove('hidden');
+        historyActions.classList.add('flex');
+        loadEmails();
+      }
+      lucide.createIcons();
+    }
+
+    // Helper: Safely parse JSON without throwing on empty or invalid text
+    async function safeJson(res) {
+      try {
+        const text = await res.text();
+        return text ? JSON.parse(text) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // SMTP Status
+    async function fetchSMTPStatus() {
+      try {
+        const res = await fetch('/api/info');
+        if (res.ok) {
+          const data = await safeJson(res);
+          if (!data) return;
+          smtpInfo = data;
+          const badge = document.getElementById('smtpStatusBadge');
+          const text = document.getElementById('smtpStatusText');
+          badge.classList.remove('hidden');
+
+          if (data.from_name) {
+            document.getElementById('previewSender').textContent = data.from_name;
+          }
+
+          if (data.is_configured) {
+            badge.className = "hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200";
+            text.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-1"></span> SMTP Ready (${data.host})`;
+          } else {
+            badge.className = "hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200";
+            text.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 inline-block mr-1"></span> SMTP credentials not set in .env`;
+          }
+        }
+      } catch (e) {
+        console.warn("Could not check SMTP config:", e);
+      }
+    }
+
+    // Load Stats
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/stats');
+        if (res.ok) {
+          const stats = await safeJson(res);
+          if (!stats) return;
+          document.getElementById('statTotal').textContent = stats.total;
+          document.getElementById('statSent').textContent = stats.sent;
+          document.getElementById('statFailed').textContent = stats.failed;
+          document.getElementById('statRate').textContent = stats.success_rate + '%';
+          document.getElementById('tabCountBadge').textContent = stats.total;
+        }
+      } catch (e) {
+        console.error("Stats load failed:", e);
+      }
+    }
+
+    // Load Emails
+    async function loadEmails(isSilent = false) {
+      const refreshIcon = document.getElementById('refreshIcon');
+      if (!isSilent && refreshIcon) refreshIcon.classList.add('animate-spin');
+
+      try {
+        const res = await fetch('/api/emails');
+        if (res.ok) {
+          const data = await safeJson(res);
+          if (data && Array.isArray(data)) {
+            emails = data;
+            renderEmailsTable();
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load emails:", e);
+      } finally {
+        if (!isSilent && refreshIcon) {
+          setTimeout(() => refreshIcon.classList.remove('animate-spin'), 300);
+        }
+      }
+    }
+
+    // Render Table
+    function renderEmailsTable() {
+      const tbody = document.getElementById('emailTableBody');
+      const emptyState = document.getElementById('emptyState');
+      tbody.innerHTML = '';
+
+      let filtered = emails.filter(item => {
+        const matchStatus = currentStatusFilter === 'ALL' || item.status === currentStatusFilter;
+        const matchSearch = !searchQuery || 
+          item.recipient.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.body.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchStatus && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+
+      filtered.forEach(mail => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/80 transition group border-b border-slate-100";
+
+        const isSent = mail.status === 'SENT';
+        const statusBadge = isSent 
+          ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span> Delivered
+             </span>`
+          : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+               <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-1.5"></span> Failed
+             </span>`;
+
+        // Format Date
+        const dateObj = new Date(mail.created_at);
+        const formattedDate = !isNaN(dateObj) 
+          ? dateObj.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+          : mail.created_at;
+
+        // Truncated snippet
+        const bodySnippet = mail.body.length > 55 ? mail.body.substring(0, 55) + '...' : mail.body;
+
+        tr.innerHTML = `
+          <td class="py-3 px-4 whitespace-nowrap">${statusBadge}</td>
+          <td class="py-3 px-4 font-medium text-slate-800 break-all max-w-[200px]">
+            <div class="flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold">
+                ${mail.recipient.charAt(0).toUpperCase()}
+              </span>
+              <span class="truncate">${escapeHtml(mail.recipient)}</span>
+            </div>
+          </td>
+          <td class="py-3 px-4">
+            <div class="font-semibold text-slate-900 truncate max-w-xs">${escapeHtml(mail.subject)}</div>
+            <div class="text-xs text-slate-400 truncate max-w-xs">${escapeHtml(bodySnippet)}</div>
+          </td>
+          <td class="py-3 px-4 whitespace-nowrap text-xs text-slate-500">${formattedDate}</td>
+          <td class="py-3 px-4 whitespace-nowrap text-right">
+            <div class="flex items-center justify-end space-x-1.5">
+              <button onclick="openModal(${mail.id})" title="View Email" class="p-1.5 text-slate-500 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+              </button>
+              <button onclick="reuseEmail(${mail.id})" title="Reuse in Compose" class="p-1.5 text-slate-500 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition">
+                <i data-lucide="repeat" class="w-4 h-4"></i>
+              </button>
+              <button onclick="deleteEmail(${mail.id})" title="Delete" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+
+      lucide.createIcons();
+    }
+
+    // Filter controls
+    function setStatusFilter(status) {
+      currentStatusFilter = status;
+      const allBtn = document.getElementById('filterBtnAll');
+      const sentBtn = document.getElementById('filterBtnSent');
+      const failedBtn = document.getElementById('filterBtnFailed');
+
+      [allBtn, sentBtn, failedBtn].forEach(b => {
+        b.className = "px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition";
+      });
+
+      if (status === 'ALL') allBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white shadow-sm transition";
+      if (status === 'SENT') sentBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white shadow-sm transition";
+      if (status === 'FAILED') failedBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-600 text-white shadow-sm transition";
+
+      renderEmailsTable();
+    }
+
+    function handleSearch() {
+      searchQuery = document.getElementById('searchInput').value.trim();
+      renderEmailsTable();
+    }
+
+    // Live Preview update
+    function updatePreview() {
+      const subj = document.getElementById('subject').value.trim();
+      const body = document.getElementById('body').value.trim();
+
+      document.getElementById('previewSubject').textContent = subj || "(Subject will appear here)";
+      document.getElementById('previewBody').textContent = body || "Your message content will be displayed here in real time as you compose...";
+    }
+
+    function updateCharCount() {
+      const len = document.getElementById('body').value.length;
+      document.getElementById('charCount').textContent = `${len} character${len === 1 ? '' : 's'}`;
+    }
+
+    // Load Sample Template
+    function loadTemplate(key) {
+      if (!templates[key]) return;
+      document.getElementById('subject').value = templates[key].subject;
+      document.getElementById('body').value = templates[key].body;
+      updatePreview();
+      updateCharCount();
+    }
+
+    // Reset Form
+    function resetForm() {
+      document.getElementById('emailForm').reset();
+      updatePreview();
+      updateCharCount();
+      hideAlert();
+    }
+
+    // Send Email Handler
+    async function handleSendEmail(e) {
+      e.preventDefault();
+      hideAlert();
+
+      const to = document.getElementById('toEmail').value.trim();
+      const subject = document.getElementById('subject').value.trim();
+      const body = document.getElementById('body').value.trim();
+
+      if (!to || !subject || !body) {
+        showAlert("error", "Please fill in all required fields (To, Subject, and Body).");
+        return;
+      }
+
+      const sendBtn = document.getElementById('sendBtn');
+      const sendBtnText = document.getElementById('sendBtnText');
+      const sendBtnIcon = document.getElementById('sendBtnIcon');
+
+      // Set Loading State
+      sendBtn.disabled = true;
+      sendBtnText.textContent = "Sending via SMTP...";
+      sendBtnIcon.classList.add('animate-spin');
+
+      try {
+        const response = await fetch('/api/email/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ to, subject, body })
+        });
+
+        // Safely parse response body
+        let data = {};
+        const responseText = await response.text();
+        try {
+          data = responseText ? JSON.parse(responseText) : {};
+        } catch (parseErr) {
+          data = {
+            success: false,
+            message: responseText || `Server responded with status HTTP ${response.status}`
+          };
+        }
+
+        if (response.ok && data.success) {
+          showAlert("success", `✓ Email sent successfully to ${to}!`);
+          document.getElementById('emailForm').reset();
+          updatePreview();
+          updateCharCount();
+        } else {
+          const errorMsg = data.detail || data.message || `Failed to dispatch email (HTTP ${response.status}).`;
+          showAlert("error", errorMsg);
+        }
+      } catch (err) {
+        showAlert("error", `Connection Error: ${err.message}. If the server is restarting, please try again in a few seconds.`);
+      } finally {
+        sendBtn.disabled = false;
+        sendBtnText.textContent = "Send Email";
+        sendBtnIcon.classList.remove('animate-spin');
+        // Refresh logs and stats
+        loadEmails(true);
+        loadStats();
+      }
+    }
+
+    // Modal Operations
+    function openModal(id) {
+      const email = emails.find(e => e.id === id);
+      if (!email) return;
+
+      selectedEmailForModal = email;
+
+      const modal = document.getElementById('detailsModal');
+      const badge = document.getElementById('modalStatusBadge');
+      const errorCont = document.getElementById('modalErrorContainer');
+
+      document.getElementById('modalSubject').textContent = email.subject;
+      document.getElementById('modalTo').textContent = email.recipient;
+      document.getElementById('modalDate').textContent = new Date(email.created_at).toLocaleString();
+      document.getElementById('modalBody').textContent = email.body;
+
+      if (email.status === 'SENT') {
+        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200";
+        badge.textContent = "Delivered";
+        errorCont.classList.add('hidden');
+      } else {
+        badge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200";
+        badge.textContent = "Failed";
+        document.getElementById('modalErrorText').textContent = email.error_message || "Unknown SMTP Error occurred during transmission.";
+        errorCont.classList.remove('hidden');
+      }
+
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeModal() {
+      document.getElementById('detailsModal').classList.add('hidden');
+      selectedEmailForModal = null;
+    }
+
+    function copyModalBody() {
+      if (!selectedEmailForModal) return;
+      navigator.clipboard.writeText(selectedEmailForModal.body).then(() => {
+        const copyText = document.getElementById('copyBtnText');
+        copyText.textContent = "Copied!";
+        setTimeout(() => { copyText.textContent = "Copy Body"; }, 2000);
+      });
+    }
+
+    function resendFromModal() {
+      if (!selectedEmailForModal) return;
+      reuseEmail(selectedEmailForModal.id);
+      closeModal();
+    }
+
+    // Reuse Email in Compose Tab
+    function reuseEmail(id) {
+      const email = emails.find(e => e.id === id);
+      if (!email) return;
+
+      document.getElementById('toEmail').value = email.recipient;
+      document.getElementById('subject').value = email.subject;
+      document.getElementById('body').value = email.body;
+
+      updatePreview();
+      updateCharCount();
+      switchTab('compose');
+
+      showAlert("info", `Loaded details from email #${id} into Compose form.`);
+    }
+
+    // Delete Email
+    async function deleteEmail(id) {
+      if (!confirm(`Are you sure you want to delete this email record (#${id}) from history?`)) return;
+
+      try {
+        const res = await fetch(`/api/emails/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          emails = emails.filter(e => e.id !== id);
+          renderEmailsTable();
+          loadStats();
+        }
+      } catch (err) {
+        alert("Failed to delete email record: " + err.message);
+      }
+    }
+
+    // Alert Notification helper
+    function showAlert(type, message) {
+      const alertBox = document.getElementById('formAlert');
+      alertBox.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-200', 'bg-rose-50', 'text-rose-800', 'border-rose-200', 'bg-blue-50', 'text-blue-800', 'border-blue-200');
+
+      if (type === 'success') {
+        alertBox.classList.add('bg-emerald-50', 'text-emerald-800', 'border', 'border-emerald-200');
+      } else if (type === 'error') {
+        alertBox.classList.add('bg-rose-50', 'text-rose-800', 'border', 'border-rose-200');
+      } else {
+        alertBox.classList.add('bg-blue-50', 'text-blue-800', 'border', 'border-blue-200');
+      }
+
+      alertBox.textContent = message;
+    }
+
+    function hideAlert() {
+      document.getElementById('formAlert').classList.add('hidden');
+    }
+
+    // Utility: HTML Escape
+    function escapeHtml(string) {
+      const div = document.createElement('div');
+      div.innerText = string;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
