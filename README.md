@@ -49,6 +49,22 @@ Open your browser and navigate to:
 
 ---
 
+## 🛠️ Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| Python | Core programming language |
+| FastAPI | Backend framework and REST API development |
+| Uvicorn | ASGI server for running the application |
+| SMTP | Email delivery and integration |
+| SQLite | Persistent storage for email history |
+| HTML5 | Dashboard structure |
+| CSS3 | Responsive dashboard styling |
+| JavaScript | Frontend interactions and API communication |
+| python-dotenv | Environment variable and SMTP configuration management |
+
+---
+
 ## 📡 API Endpoints
 
 | Method | Endpoint | Description |
