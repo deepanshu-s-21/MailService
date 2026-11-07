@@ -1,6 +1,8 @@
 # Mail Service ✉️
 
-A fast, reusable email dispatching service built with FastAPI, complete with an interactive Web UI dashboard, email history logger, and SMTP integration.
+A lightweight, reusable email delivery service built with FastAPI and Python that provides a REST API for sending transactional emails through SMTP.
+
+MailService is designed to simplify email integration across applications by providing a centralized service for handling outgoing emails.
 
 ---
 
